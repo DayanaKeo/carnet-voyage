@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  password   String
+  role       String   @default("user")
+  premium    Boolean  @default(false)
+  created_at DateTime @default(now())
+  voyages    Voyage[]
+}
+
+model Voyage {
+  id          Int       @id @default(autoincrement())
+  user        User      @relation(fields: [user_id], references: [id])
+  user_id     Int
+  titre       String
+  description String?
+  date_debut  DateTime
+  date_fin    DateTime
+  image       String?
+  etapes      Etape[]
+  partages    Partage[]
+}
+
+model Etape {
+  id         Int      @id @default(autoincrement())
+  voyage     Voyage   @relation(fields: [voyage_id], references: [id])
+  voyage_id  Int
+  latitude   Decimal  @db.Decimal(10,8)
+  longitude  Decimal  @db.Decimal(11,8)
+  adresse    String
+  texte      String?
+  date       DateTime
+  medias     Media[]
+}
+
+model Media {
+  id         Int     @id @default(autoincrement())
+  etape      Etape   @relation(fields: [etape_id], references: [id])
+  etape_id   Int
+  type       String  // ENUM simulé : 'image', 'video'
+  url        String
+  uploaded_at DateTime @default(now())
+}
+
+model Partage {
+  id            Int      @id @default(autoincrement())
+  voyage        Voyage   @relation(fields: [voyage_id], references: [id])
+  voyage_id     Int
+  code_pin_hash String
+  expiration    DateTime
+}
