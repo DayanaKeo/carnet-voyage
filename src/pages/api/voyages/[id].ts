@@ -1,6 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getToken } from 'next-auth/jwt';
+import { z } from 'zod'
+
+const VoyageUpdateSchema = z.object({
+  titre: z.string().min(1).optional(),
+  description: z.string().optional(),
+  date_debut: z.coerce.date().optional(),
+  date_fin: z.coerce.date().optional(),
+  image: z.string().url().optional()
+})
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
@@ -33,20 +42,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PATCH') {
-      const { titre, description, date_debut, date_fin, image } = req.body;
-
-      const updatedVoyage = await prisma.voyage.update({
-        where: { id: voyageId },
-        data: {
-          titre,
-          description,
-          date_debut: date_debut ? new Date(date_debut) : undefined,
-          date_fin: date_fin ? new Date(date_fin) : undefined,
-          image
+      try {
+        const data = VoyageUpdateSchema.parse(req.body)
+      
+        const updatedVoyage = await prisma.voyage.update({
+          where: { id: voyageId },
+          data
+        })
+      
+        return res.status(200).json(updatedVoyage)
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({
+            error: 'Erreur de validation',
+            details: error.errors
+          })
         }
-      });
-
-      return res.status(200).json(updatedVoyage);
+        console.error('Erreur PATCH voyage :', error)
+        return res.status(500).json({ error: 'Erreur serveur' })
+      }
     }
 
     if (req.method === 'DELETE') {
