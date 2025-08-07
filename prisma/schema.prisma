@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -34,10 +28,13 @@ model Voyage {
   image       String?
   etapes      Etape[]
   partages    Partage[]
+  is_public   Boolean   @default(true)
+  createdAt   DateTime  @default(now())
 }
 
 model Etape {
   id         Int      @id @default(autoincrement())
+  titre      String  
   voyage     Voyage   @relation(fields: [voyage_id], references: [id])
   voyage_id  Int
   latitude   Decimal  @db.Decimal(10,8)
@@ -46,6 +43,7 @@ model Etape {
   texte      String?
   date       DateTime
   medias     Media[]
+  createdAt  DateTime @default(now())
 }
 
 model Media {
