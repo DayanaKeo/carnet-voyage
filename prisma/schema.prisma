@@ -46,13 +46,18 @@ model Etape {
   createdAt  DateTime @default(now())
 }
 
+enum MediaType {
+  image
+  video
+}
+
 model Media {
-  id         Int     @id @default(autoincrement())
-  etape      Etape   @relation(fields: [etape_id], references: [id])
-  etape_id   Int
-  type       String  // ENUM simulé : 'image', 'video'
-  url        String
-  uploaded_at DateTime @default(now())
+  id          Int        @id @default(autoincrement())
+  etape       Etape      @relation(fields: [etape_id], references: [id])
+  etape_id    Int
+  type        MediaType
+  url         String
+  uploaded_at DateTime   @default(now())
 }
 
 model Partage {
