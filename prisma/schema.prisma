@@ -7,63 +7,75 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model etape {
+  id        Int      @id @default(autoincrement())
+  voyage_id Int
+  latitude  Decimal  @db.Decimal(10, 8)
+  longitude Decimal  @db.Decimal(11, 8)
+  adresse   String
+  texte     String?
+  date      DateTime
+  createdAt DateTime @default(now())
+  titre     String
+  voyage    voyage   @relation(fields: [voyage_id], references: [id], map: "Etape_voyage_id_fkey")
+  media     media[]
+
+  @@index([voyage_id], map: "Etape_voyage_id_fkey")
+}
+
+model media {
+  id          Int        @id @default(autoincrement())
+  etape_id    Int
+  type        media_type
+  url         String
+  uploaded_at DateTime   @default(now())
+  etape       etape      @relation(fields: [etape_id], references: [id], map: "Media_etape_id_fkey")
+
+  @@index([etape_id], map: "Media_etape_id_fkey")
+}
+
+model partage {
+  id            Int      @id @default(autoincrement())
+  voyage_id     Int
+  code_pin_hash String   @db.Char(60)
+  expiration    DateTime
+  slug          String   @unique @db.VarChar(32)
+  views         Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  voyage        voyage   @relation(fields: [voyage_id], references: [id], map: "Partage_voyage_id_fkey")
+
+  @@index([voyage_id], map: "Partage_voyage_id_fkey")
+}
+
+model user {
   id         Int      @id @default(autoincrement())
-  email      String   @unique
+  email      String   @unique(map: "User_email_key")
   password   String
   role       String   @default("user")
   premium    Boolean  @default(false)
   created_at DateTime @default(now())
-  voyages    Voyage[]
+  voyage     voyage[]
 }
 
-model Voyage {
+model voyage {
   id          Int       @id @default(autoincrement())
-  user        User      @relation(fields: [user_id], references: [id])
   user_id     Int
   titre       String
   description String?
   date_debut  DateTime
   date_fin    DateTime
   image       String?
-  etapes      Etape[]
-  partages    Partage[]
-  is_public   Boolean   @default(true)
   createdAt   DateTime  @default(now())
+  is_public   Boolean   @default(true)
+  etape       etape[]
+  partage     partage[]
+  user        user      @relation(fields: [user_id], references: [id], map: "Voyage_user_id_fkey")
+
+  @@index([user_id], map: "Voyage_user_id_fkey")
 }
 
-model Etape {
-  id         Int      @id @default(autoincrement())
-  titre      String  
-  voyage     Voyage   @relation(fields: [voyage_id], references: [id])
-  voyage_id  Int
-  latitude   Decimal  @db.Decimal(10,8)
-  longitude  Decimal  @db.Decimal(11,8)
-  adresse    String
-  texte      String?
-  date       DateTime
-  medias     Media[]
-  createdAt  DateTime @default(now())
-}
-
-enum MediaType {
+enum media_type {
   image
   video
-}
-
-model Media {
-  id          Int        @id @default(autoincrement())
-  etape       Etape      @relation(fields: [etape_id], references: [id])
-  etape_id    Int
-  type        MediaType
-  url         String
-  uploaded_at DateTime   @default(now())
-}
-
-model Partage {
-  id            Int      @id @default(autoincrement())
-  voyage        Voyage   @relation(fields: [voyage_id], references: [id])
-  voyage_id     Int
-  code_pin_hash String
-  expiration    DateTime
 }
